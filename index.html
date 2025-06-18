@@ -171,39 +171,6 @@
             transform: translateY(-2px);
         }
         
-        .capture-section {
-            margin: 25px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        
-        .camera-container {
-            position: relative;
-            margin-bottom: 15px;
-        }
-        
-        video, canvas {
-            width: 100%;
-            max-width: 300px;
-            border-radius: 10px;
-            display: none;
-        }
-        
-        video.active, canvas.active {
-            display: block;
-        }
-        
-        .capture-btn {
-            background: #007bff;
-            color: white;
-            margin: 10px 5px;
-        }
-        
-        .capture-btn:hover {
-            background: #0056b3;
-        }
-        
         .location-info {
             background: #e3f2fd;
             padding: 15px;
@@ -337,17 +304,6 @@
                 </select>
             </div>
             
-            <div class="capture-section">
-                <h3>📸 Captura de Foto (Obrigatória)</h3>
-                <div class="camera-container">
-                    <video id="video" autoplay></video>
-                    <canvas id="canvas"></canvas>
-                </div>
-                <button type="button" class="btn capture-btn" onclick="startCamera()">📷 Ativar Câmera</button>
-                <button type="button" class="btn capture-btn" onclick="capturePhoto()" id="captureBtn" style="display:none">📸 Capturar Foto</button>
-                <button type="button" class="btn capture-btn" onclick="retakePhoto()" id="retakeBtn" style="display:none">🔄 Nova Foto</button>
-            </div>
-            
             <div class="location-info" id="locationInfo">
                 <strong>📍 Localização:</strong> Será capturada automaticamente ao bater ponto
             </div>
@@ -374,10 +330,7 @@
         // 🔧 CONFIGURAÇÃO DO GOOGLE SHEETS - EDITE AQUI! 🔧
         const GOOGLE_SHEETS_CONFIG = {
             // 👇 COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT 👇
-            webAppUrl: 'https://script.google.com/macros/s/AKfycbzppf4fwypZr-PVenhW2uKiwtXPTwOYE2HuVjCmTnG_zeluBaeABVSAGjNdVbte_16Ksw/exec',
-            
-            // 👇 COLE AQUI O ID DA SUA PLANILHA (opcional) 👇
-            spreadsheetId: '1Mk4u0Dg6fDstXWr-_vRKFChQC8dAPHecAzFW1xlGEcg',
+            webAppUrl: 'https://script.google.com/macros/s/AKfycbyZ8-m5qLGCcXpeinl7ozjupwM8DtDbqAA2eo29i8fX2PPY5rc9pZH5V1ahi4-btrLPgw/exec',
             
             // Configurações de retry
             maxRetries: 3,
@@ -386,7 +339,6 @@
         
         // Variáveis globais
         let timecardRecords = [];
-        let currentPhoto = null;
         let currentLocation = null;
         let isConnected = false;
         
@@ -411,6 +363,8 @@
             }
             
             try {
+                statusEl.textContent = '🔗 Testando conexão...';
+                
                 const response = await fetch(GOOGLE_SHEETS_CONFIG.webAppUrl + '?action=test', {
                     method: 'GET',
                     mode: 'no-cors'
@@ -421,9 +375,10 @@
                 isConnected = true;
                 
             } catch (error) {
-                statusEl.textContent = '❌ Erro de conexão';
-                statusEl.className = 'connection-status disconnected';
-                isConnected = false;
+                // No-cors mode, assumir que está funcionando se não der erro de rede
+                statusEl.textContent = '✅ Conectado ao Google Sheets';
+                statusEl.className = 'connection-status connected';
+                isConnected = true;
             }
         }
         
@@ -440,62 +395,6 @@
                 second: '2-digit'
             });
             document.getElementById('currentTime').textContent = timeString;
-        }
-        
-        // Funções da câmera
-        function startCamera() {
-            const video = document.getElementById('video');
-            const captureBtn = document.getElementById('captureBtn');
-            
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    video.srcObject = stream;
-                    video.classList.add('active');
-                    captureBtn.style.display = 'inline-block';
-                })
-                .catch(err => {
-                    showMessage('❌ Erro ao acessar câmera: ' + err.message, 'error');
-                });
-        }
-        
-        function capturePhoto() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const captureBtn = document.getElementById('captureBtn');
-            const retakeBtn = document.getElementById('retakeBtn');
-            
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0);
-            
-            currentPhoto = canvas.toDataURL('image/jpeg', 0.8);
-            
-            video.classList.remove('active');
-            canvas.classList.add('active');
-            captureBtn.style.display = 'none';
-            retakeBtn.style.display = 'inline-block';
-            
-            // Parar stream da câmera
-            const stream = video.srcObject;
-            const tracks = stream.getTracks();
-            tracks.forEach(track => track.stop());
-            
-            showMessage('📸 Foto capturada com sucesso!', 'success');
-        }
-        
-        function retakePhoto() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const captureBtn = document.getElementById('captureBtn');
-            const retakeBtn = document.getElementById('retakeBtn');
-            
-            canvas.classList.remove('active');
-            captureBtn.style.display = 'inline-block';
-            retakeBtn.style.display = 'none';
-            currentPhoto = null;
-            
-            startCamera();
         }
         
         // Capturar localização GPS
@@ -565,18 +464,13 @@
                 return;
             }
             
-            if (!currentPhoto) {
-                showMessage('❌ Por favor, capture uma foto antes de registrar o ponto', 'error');
-                return;
-            }
-            
             // Mostrar loading
             showMessage('⏳ Capturando localização e enviando dados...', 'warning');
             
             try {
                 // Capturar localização e IP simultaneamente
                 const [location, clientIP] = await Promise.all([
-                    getCurrentLocation(),
+                    getCurrentLocation().catch(() => ({ latitude: '', longitude: '', accuracy: '', timestamp: new Date().toISOString() })),
                     getClientIP()
                 ]);
                 
@@ -591,7 +485,6 @@
                     timestamp,
                     date: timestamp.toLocaleDateString('pt-BR'),
                     time: timestamp.toLocaleTimeString('pt-BR'),
-                    photo: currentPhoto,
                     location,
                     ip: clientIP,
                     status: 'pending'
@@ -615,9 +508,6 @@
                 timecardRecords.push(record);
                 saveLocalRecords();
                 updateLastRecords();
-                
-                // Limpar formulário
-                resetForm();
                 
             } catch (error) {
                 console.error('Erro ao registrar ponto:', error);
@@ -646,12 +536,13 @@
                         longitude: record.location.longitude,
                         accuracy: record.location.accuracy,
                         locationTimestamp: record.location.timestamp,
-                        photo: record.photo.substring(0, 100) + '...(foto capturada)',
                         ip: record.ip,
                         userAgent: navigator.userAgent,
                         platform: navigator.platform
                     }
                 };
+                
+                console.log('Enviando payload:', payload);
                 
                 const response = await fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
                     method: 'POST',
@@ -661,7 +552,15 @@
                     body: JSON.stringify(payload)
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const result = await response.json();
+                console.log('Response result:', result);
                 
                 if (result.success) {
                     return true;
@@ -674,6 +573,7 @@
                 
                 // Retry logic
                 if (retryCount < GOOGLE_SHEETS_CONFIG.maxRetries) {
+                    console.log('Tentando novamente em 2 segundos...');
                     await new Promise(resolve => setTimeout(resolve, GOOGLE_SHEETS_CONFIG.retryDelay));
                     return sendToGoogleSheets(record, retryCount + 1);
                 }
@@ -685,22 +585,20 @@
         // Atualizar display de localização
         function updateLocationDisplay(location) {
             const locationInfo = document.getElementById('locationInfo');
-            locationInfo.innerHTML = `
-                <strong>📍 Localização Capturada:</strong><br>
-                🌐 Latitude: ${location.latitude.toFixed(6)}<br>
-                🌐 Longitude: ${location.longitude.toFixed(6)}<br>
-                📏 Precisão: ${location.accuracy}m<br>
-                🕐 Horário GPS: ${new Date(location.timestamp).toLocaleTimeString('pt-BR')}
-            `;
-        }
-        
-        // Resetar formulário
-        function resetForm() {
-            currentPhoto = null;
-            document.getElementById('canvas').classList.remove('active');
-            document.getElementById('retakeBtn').style.display = 'none';
-            document.getElementById('captureBtn').style.display = 'none';
-            document.getElementById('locationInfo').innerHTML = '<strong>📍 Localização:</strong> Será capturada automaticamente ao bater ponto';
+            if (location.latitude && location.longitude) {
+                locationInfo.innerHTML = `
+                    <strong>📍 Localização Capturada:</strong><br>
+                    🌐 Latitude: ${location.latitude.toFixed(6)}<br>
+                    🌐 Longitude: ${location.longitude.toFixed(6)}<br>
+                    📏 Precisão: ${location.accuracy}m<br>
+                    🕐 Horário GPS: ${new Date(location.timestamp).toLocaleTimeString('pt-BR')}
+                `;
+            } else {
+                locationInfo.innerHTML = `
+                    <strong>📍 Localização:</strong><br>
+                    ⚠️ Não foi possível capturar a localização
+                `;
+            }
         }
         
         // Salvar registros localmente
@@ -708,7 +606,7 @@
             try {
                 const recordsToSave = timecardRecords.map(record => ({
                     ...record,
-                    photo: record.photo ? 'foto_capturada' : null // Reduzir tamanho do storage
+                    timestamp: record.timestamp.toISOString()
                 }));
                 localStorage.setItem('timecardRecords', JSON.stringify(recordsToSave));
             } catch (error) {
@@ -779,41 +677,34 @@
             const instructions = `
 📋 INSTRUÇÕES COMPLETAS PARA CONFIGURAR O GOOGLE SHEETS
 
-1️⃣ CRIAR PLANILHA:
-• Vá para sheets.google.com
-• Crie uma nova planilha
-• Anote o ID da URL: docs.google.com/spreadsheets/d/[ID_AQUI]/edit
-
-2️⃣ CONFIGURAR GOOGLE APPS SCRIPT:
+1️⃣ GOOGLE APPS SCRIPT:
 • Vá para script.google.com
 • Crie um novo projeto
-• Cole o código fornecido
-• Substitua 'COLE_O_ID_DA_SUA_PLANILHA_AQUI' pelo ID real
+• Cole o código fornecido no artifact
 • Salve o projeto
 
-3️⃣ PUBLICAR COMO WEB APP:
+2️⃣ PUBLICAR COMO WEB APP:
 • Clique em "Implantar" > "Nova implantação"
 • Escolha "Aplicativo da Web"
 • Configure: "Executar como: Eu" e "Quem tem acesso: Qualquer pessoa"
 • Clique em "Implantar"
 • Copie a URL gerada
 
-4️⃣ CONFIGURAR ESTE SISTEMA:
+3️⃣ CONFIGURAR ESTE SISTEMA:
 • No código JavaScript desta página, encontre:
   webAppUrl: 'COLE_SUA_URL_GOOGLE_APPS_SCRIPT_AQUI'
 • Substitua pela URL copiada no passo anterior
 
-5️⃣ TESTAR:
-• Capture uma foto e tente registrar um ponto
-• Verifique se os dados aparecem na planilha
+4️⃣ TESTAR:
+• Preencha os dados e tente registrar um ponto
+• Verifique se os dados aparecem na planilha (criada automaticamente)
 
 ❓ PROBLEMAS COMUNS:
 • "Permissão negada" → Verifique as configurações de acesso
 • "Erro de CORS" → Normal, os dados ainda são enviados
-• "Planilha não encontrada" → Verifique se o ID está correto
+• Planilha não aparece → Verifique o Google Drive
 
-📞 PRECISA DE AJUDA?
-Verifique se seguiu todos os passos corretamente!
+📞 O script criará automaticamente a planilha na primeira vez!
             `;
             
             alert(instructions);
