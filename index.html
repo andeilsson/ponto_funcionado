@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Ponto - Funcionário</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .config-warning {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .config-warning h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .config-warning p {
+            color: #856404;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .config-warning code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .hide-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .current-time {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-entrada {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-entrada:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-saida {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-saida:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .capture-section {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .camera-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        video, canvas {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        video.active, canvas.active {
+            display: block;
+        }
+        
+        .capture-btn {
+            background: #007bff;
+            color: white;
+            margin: 10px 5px;
+        }
+        
+        .capture-btn:hover {
+            background: #0056b3;
+        }
+        
+        .location-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        
+        .status-msg {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .last-records {
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .record-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .admin-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .admin-link:hover {
+            background: #545b62;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">⚠️ Verificando conexão...</div>
+    <a href="#" class="admin-link" onclick="showAdminPage()">👨‍💼 Área Admin</a>
+    
+    <div class="container">
+        <!-- AVISO DE CONFIGURAÇÃO -->
+        <div id="configWarning" class="config-warning">
+            <h4>⚙️ CONFIGURAÇÃO NECESSÁRIA</h4>
+            <p><strong>1.</strong> No código JavaScript abaixo, encontre a linha:</p>
+            <code>webAppUrl: 'COLE_SUA_URL_GOOGLE_APPS_SCRIPT_AQUI'</code>
+            <p><strong>2.</strong> Substitua pela URL do seu Google Apps Script</p>
+            <p><strong>3.</strong> Clique no botão para ver as instruções completas</p>
+            <button class="hide-btn" onclick="showInstructions()">📋 Ver Instruções Completas</button>
+            <button class="hide-btn" onclick="hideConfigWarning()">✅ Já Configurei</button>
+        </div>
+        
+        <div class="logo">🕐</div>
+        <h1>Sistema de Ponto</h1>
+        <p class="subtitle">Registre sua entrada e saída</p>
+        
+        <div class="current-time" id="currentTime"></div>
+        
+        <form id="timecardForm">
+            <div class="form-group">
+                <label for="employeeId">ID do Funcionário:</label>
+                <input type="text" id="employeeId" required placeholder="Ex: 001, 002, 003...">
+            </div>
+            
+            <div class="form-group">
+                <label for="employeeName">Nome Completo:</label>
+                <input type="text" id="employeeName" required placeholder="Digite seu nome completo">
+            </div>
+            
+            <div class="form-group">
+                <label for="department">Departamento:</label>
+                <select id="department" required>
+                    <option value="">Selecione o departamento</option>
+                    <option value="administrativo">Administrativo</option>
+                    <option value="vendas">Vendas</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="ti">Tecnologia da Informação</option>
+                    <option value="rh">Recursos Humanos</option>
+                    <option value="financeiro">Financeiro</option>
+                    <option value="producao">Produção</option>
+                    <option value="operacoes">Operações</option>
+                    <option value="juridico">Jurídico</option>
+                </select>
+            </div>
+            
+            <div class="capture-section">
+                <h3>📸 Captura de Foto (Obrigatória)</h3>
+                <div class="camera-container">
+                    <video id="video" autoplay></video>
+                    <canvas id="canvas"></canvas>
+                </div>
+                <button type="button" class="btn capture-btn" onclick="startCamera()">📷 Ativar Câmera</button>
+                <button type="button" class="btn capture-btn" onclick="capturePhoto()" id="captureBtn" style="display:none">📸 Capturar Foto</button>
+                <button type="button" class="btn capture-btn" onclick="retakePhoto()" id="retakeBtn" style="display:none">🔄 Nova Foto</button>
+            </div>
+            
+            <div class="location-info" id="locationInfo">
+                <strong>📍 Localização:</strong> Será capturada automaticamente ao bater ponto
+            </div>
+            
+            <div class="action-buttons">
+                <button type="button" class="btn btn-entrada" onclick="registerTimecard('entrada')">
+                    ✅ ENTRADA
+                </button>
+                <button type="button" class="btn btn-saida" onclick="registerTimecard('saida')">
+                    ❌ SAÍDA
+                </button>
+            </div>
+        </form>
+        
+        <div id="statusMsg"></div>
+        
+        <div class="last-records">
+            <h3>📋 Últimos Registros</h3>
+            <div id="lastRecords"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 🔧 CONFIGURAÇÃO DO GOOGLE SHEETS - EDITE AQUI! 🔧
+        const GOOGLE_SHEETS_CONFIG = {
+            // 👇 COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT 👇
+            webAppUrl: 'https://script.google.com/macros/s/AKfycbzppf4fwypZr-PVenhW2uKiwtXPTwOYE2HuVjCmTnG_zeluBaeABVSAGjNdVbte_16Ksw/exec',
+            
+            // 👇 COLE AQUI O ID DA SUA PLANILHA (opcional) 👇
+            spreadsheetId: '1Mk4u0Dg6fDstXWr-_vRKFChQC8dAPHecAzFW1xlGEcg',
+            
+            // Configurações de retry
+            maxRetries: 3,
+            retryDelay: 2000
+        };
+        
+        // Variáveis globais
+        let timecardRecords = [];
+        let currentPhoto = null;
+        let currentLocation = null;
+        let isConnected = false;
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            checkConnection();
+            loadLocalRecords();
+            updateLastRecords();
+        });
+        
+        // Verificar conexão com Google Sheets
+        async function checkConnection() {
+            const statusEl = document.getElementById('connectionStatus');
+            
+            if (!GOOGLE_SHEETS_CONFIG.webAppUrl || GOOGLE_SHEETS_CONFIG.webAppUrl === 'COLE_SUA_URL_GOOGLE_APPS_SCRIPT_AQUI') {
+                statusEl.textContent = '⚠️ Google Sheets não configurado';
+                statusEl.className = 'connection-status disconnected';
+                isConnected = false;
+                return;
+            }
+            
+            try {
+                const response = await fetch(GOOGLE_SHEETS_CONFIG.webAppUrl + '?action=test', {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                statusEl.textContent = '✅ Conectado ao Google Sheets';
+                statusEl.className = 'connection-status connected';
+                isConnected = true;
+                
+            } catch (error) {
+                statusEl.textContent = '❌ Erro de conexão';
+                statusEl.className = 'connection-status disconnected';
+                isConnected = false;
+            }
+        }
+        
+        // Atualizar relógio
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleString('pt-BR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        
+        // Funções da câmera
+        function startCamera() {
+            const video = document.getElementById('video');
+            const captureBtn = document.getElementById('captureBtn');
+            
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.classList.add('active');
+                    captureBtn.style.display = 'inline-block';
+                })
+                .catch(err => {
+                    showMessage('❌ Erro ao acessar câmera: ' + err.message, 'error');
+                });
+        }
+        
+        function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const captureBtn = document.getElementById('captureBtn');
+            const retakeBtn = document.getElementById('retakeBtn');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            
+            currentPhoto = canvas.toDataURL('image/jpeg', 0.8);
+            
+            video.classList.remove('active');
+            canvas.classList.add('active');
+            captureBtn.style.display = 'none';
+            retakeBtn.style.display = 'inline-block';
+            
+            // Parar stream da câmera
+            const stream = video.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+            
+            showMessage('📸 Foto capturada com sucesso!', 'success');
+        }
+        
+        function retakePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const captureBtn = document.getElementById('captureBtn');
+            const retakeBtn = document.getElementById('retakeBtn');
+            
+            canvas.classList.remove('active');
+            captureBtn.style.display = 'inline-block';
+            retakeBtn.style.display = 'none';
+            currentPhoto = null;
+            
+            startCamera();
+        }
+        
+        // Capturar localização GPS
+        function getCurrentLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject('Geolocalização não suportada pelo navegador');
+                    return;
+                }
+                
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 60000
+                };
+                
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const location = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: Math.round(position.coords.accuracy),
+                            timestamp: new Date().toISOString()
+                        };
+                        resolve(location);
+                    },
+                    error => {
+                        let errorMsg = 'Erro desconhecido';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMsg = 'Permissão de localização negada';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMsg = 'Localização indisponível';
+                                break;
+                            case error.TIMEOUT:
+                                errorMsg = 'Timeout na captura de localização';
+                                break;
+                        }
+                        reject(errorMsg);
+                    },
+                    options
+                );
+            });
+        }
+        
+        // Obter IP do cliente
+        async function getClientIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                return 'IP não disponível';
+            }
+        }
+        
+        // Registrar ponto principal
+        async function registerTimecard(type) {
+            const employeeId = document.getElementById('employeeId').value.trim();
+            const employeeName = document.getElementById('employeeName').value.trim();
+            const department = document.getElementById('department').value;
+            
+            // Validações
+            if (!employeeId || !employeeName || !department) {
+                showMessage('❌ Por favor, preencha todos os campos obrigatórios', 'error');
+                return;
+            }
+            
+            if (!currentPhoto) {
+                showMessage('❌ Por favor, capture uma foto antes de registrar o ponto', 'error');
+                return;
+            }
+            
+            // Mostrar loading
+            showMessage('⏳ Capturando localização e enviando dados...', 'warning');
+            
+            try {
+                // Capturar localização e IP simultaneamente
+                const [location, clientIP] = await Promise.all([
+                    getCurrentLocation(),
+                    getClientIP()
+                ]);
+                
+                // Criar registro
+                const timestamp = new Date();
+                const record = {
+                    id: timestamp.getTime(),
+                    employeeId,
+                    employeeName,
+                    department,
+                    type,
+                    timestamp,
+                    date: timestamp.toLocaleDateString('pt-BR'),
+                    time: timestamp.toLocaleTimeString('pt-BR'),
+                    photo: currentPhoto,
+                    location,
+                    ip: clientIP,
+                    status: 'pending'
+                };
+                
+                // Atualizar display de localização
+                updateLocationDisplay(location);
+                
+                // Enviar para Google Sheets
+                const success = await sendToGoogleSheets(record);
+                
+                if (success) {
+                    record.status = 'synced';
+                    showMessage(`✅ Ponto de ${type.toUpperCase()} registrado com sucesso no Google Sheets!`, 'success');
+                } else {
+                    record.status = 'pending';
+                    showMessage(`⚠️ Ponto registrado localmente. Será sincronizado quando possível.`, 'warning');
+                }
+                
+                // Salvar localmente
+                timecardRecords.push(record);
+                saveLocalRecords();
+                updateLastRecords();
+                
+                // Limpar formulário
+                resetForm();
+                
+            } catch (error) {
+                console.error('Erro ao registrar ponto:', error);
+                showMessage(`❌ Erro ao registrar ponto: ${error}`, 'error');
+            }
+        }
+        
+        // Enviar dados para Google Sheets
+        async function sendToGoogleSheets(record, retryCount = 0) {
+            if (!GOOGLE_SHEETS_CONFIG.webAppUrl || GOOGLE_SHEETS_CONFIG.webAppUrl === 'COLE_SUA_URL_GOOGLE_APPS_SCRIPT_AQUI') {
+                throw new Error('Google Sheets não configurado');
+            }
+            
+            try {
+                const payload = {
+                    action: 'addTimecard',
+                    data: {
+                        employeeId: record.employeeId,
+                        employeeName: record.employeeName,
+                        department: record.department,
+                        type: record.type,
+                        timestamp: record.timestamp.toISOString(),
+                        date: record.date,
+                        time: record.time,
+                        latitude: record.location.latitude,
+                        longitude: record.location.longitude,
+                        accuracy: record.location.accuracy,
+                        locationTimestamp: record.location.timestamp,
+                        photo: record.photo.substring(0, 100) + '...(foto capturada)',
+                        ip: record.ip,
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform
+                    }
+                };
+                
+                const response = await fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    return true;
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido do servidor');
+                }
+                
+            } catch (error) {
+                console.error(`Tentativa ${retryCount + 1} falhou:`, error);
+                
+                // Retry logic
+                if (retryCount < GOOGLE_SHEETS_CONFIG.maxRetries) {
+                    await new Promise(resolve => setTimeout(resolve, GOOGLE_SHEETS_CONFIG.retryDelay));
+                    return sendToGoogleSheets(record, retryCount + 1);
+                }
+                
+                throw error;
+            }
+        }
+        
+        // Atualizar display de localização
+        function updateLocationDisplay(location) {
+            const locationInfo = document.getElementById('locationInfo');
+            locationInfo.innerHTML = `
+                <strong>📍 Localização Capturada:</strong><br>
+                🌐 Latitude: ${location.latitude.toFixed(6)}<br>
+                🌐 Longitude: ${location.longitude.toFixed(6)}<br>
+                📏 Precisão: ${location.accuracy}m<br>
+                🕐 Horário GPS: ${new Date(location.timestamp).toLocaleTimeString('pt-BR')}
+            `;
+        }
+        
+        // Resetar formulário
+        function resetForm() {
+            currentPhoto = null;
+            document.getElementById('canvas').classList.remove('active');
+            document.getElementById('retakeBtn').style.display = 'none';
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('locationInfo').innerHTML = '<strong>📍 Localização:</strong> Será capturada automaticamente ao bater ponto';
+        }
+        
+        // Salvar registros localmente
+        function saveLocalRecords() {
+            try {
+                const recordsToSave = timecardRecords.map(record => ({
+                    ...record,
+                    photo: record.photo ? 'foto_capturada' : null // Reduzir tamanho do storage
+                }));
+                localStorage.setItem('timecardRecords', JSON.stringify(recordsToSave));
+            } catch (error) {
+                console.error('Erro ao salvar localmente:', error);
+            }
+        }
+        
+        // Carregar registros locais
+        function loadLocalRecords() {
+            try {
+                const saved = localStorage.getItem('timecardRecords');
+                if (saved) {
+                    timecardRecords = JSON.parse(saved).map(record => ({
+                        ...record,
+                        timestamp: new Date(record.timestamp)
+                    }));
+                }
+            } catch (error) {
+                console.error('Erro ao carregar registros locais:', error);
+                timecardRecords = [];
+            }
+        }
+        
+        // Atualizar últimos registros
+        function updateLastRecords() {
+            const container = document.getElementById('lastRecords');
+            const lastFive = timecardRecords.slice(-5).reverse();
+            
+            if (lastFive.length === 0) {
+                container.innerHTML = '<p style="color: #666; font-style: italic;">Nenhum registro ainda</p>';
+                return;
+            }
+            
+            container.innerHTML = lastFive.map(record => {
+                const statusIcon = record.status === 'synced' ? '✅' : record.status === 'pending' ? '⏳' : '❌';
+                const statusText = record.status === 'synced' ? 'Sincronizado' : record.status === 'pending' ? 'Pendente' : 'Erro';
+                
+                return `
+                    <div class="record-item">
+                        <strong>${record.employeeName}</strong> - ${record.type.toUpperCase()} ${statusIcon}<br>
+                        <small>${record.timestamp.toLocaleString('pt-BR')} | ${record.department} | ${statusText}</small>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Mostrar mensagens
+        function showMessage(message, type) {
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.textContent = message;
+            statusMsg.className = `status-msg ${type}`;
+            
+            // Auto-hide após 5 segundos, exceto para warnings
+            if (type !== 'warning') {
+                setTimeout(() => {
+                    statusMsg.textContent = '';
+                    statusMsg.className = '';
+                }, 5000);
+            }
+        }
+        
+        // Funções de configuração
+        function hideConfigWarning() {
+            document.getElementById('configWarning').style.display = 'none';
+        }
+        
+        function showInstructions() {
+            const instructions = `
+📋 INSTRUÇÕES COMPLETAS PARA CONFIGURAR O GOOGLE SHEETS
+
+1️⃣ CRIAR PLANILHA:
+• Vá para sheets.google.com
+• Crie uma nova planilha
+• Anote o ID da URL: docs.google.com/spreadsheets/d/[ID_AQUI]/edit
+
+2️⃣ CONFIGURAR GOOGLE APPS SCRIPT:
+• Vá para script.google.com
+• Crie um novo projeto
+• Cole o código fornecido
+• Substitua 'COLE_O_ID_DA_SUA_PLANILHA_AQUI' pelo ID real
+• Salve o projeto
+
+3️⃣ PUBLICAR COMO WEB APP:
+• Clique em "Implantar" > "Nova implantação"
+• Escolha "Aplicativo da Web"
+• Configure: "Executar como: Eu" e "Quem tem acesso: Qualquer pessoa"
+• Clique em "Implantar"
+• Copie a URL gerada
+
+4️⃣ CONFIGURAR ESTE SISTEMA:
+• No código JavaScript desta página, encontre:
+  webAppUrl: 'COLE_SUA_URL_GOOGLE_APPS_SCRIPT_AQUI'
+• Substitua pela URL copiada no passo anterior
+
+5️⃣ TESTAR:
+• Capture uma foto e tente registrar um ponto
+• Verifique se os dados aparecem na planilha
+
+❓ PROBLEMAS COMUNS:
+• "Permissão negada" → Verifique as configurações de acesso
+• "Erro de CORS" → Normal, os dados ainda são enviados
+• "Planilha não encontrada" → Verifique se o ID está correto
+
+📞 PRECISA DE AJUDA?
+Verifique se seguiu todos os passos corretamente!
+            `;
+            
+            alert(instructions);
+        }
+        
+        function showAdminPage() {
+            alert('🔗 Redirecionando para área administrativa...\n\n(Em implementação real, seria uma página separada)');
+        }
+    </script>
+</body>
+</html>
