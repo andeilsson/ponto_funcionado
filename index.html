@@ -214,6 +214,10 @@
             <button type="submit" class="btn-primary" id="submitBtn">
                 📍 Registrar Ponto
             </button>
+            
+            <button type="button" class="btn-primary" id="testBtn" style="background: #28a745; margin-top: 10px;">
+                🔧 Testar Conexão
+            </button>
         </form>
 
         <div id="infoDisplay" class="info-display" style="display: none;">
@@ -322,22 +326,45 @@
             const webhookUrl = WEBHOOK_URL;
             
             if (!webhookUrl || webhookUrl === 'COLE_SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI') {
-                throw new Error('URL do webhook não configurada no código');
+                throw new Error('❌ URL do webhook não configurada no código');
             }
 
-            const response = await fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dados)
-            });
+            console.log('🔄 Enviando dados para:', webhookUrl);
+            console.log('📦 Dados:', dados);
 
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                console.log('📡 Status da resposta:', response.status);
+                console.log('🌐 Response OK:', response.ok);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Erro da resposta:', errorText);
+                    throw new Error(`Erro HTTP ${response.status}: ${errorText}`);
+                }
+
+                const resultado = await response.json();
+                console.log('✅ Resultado:', resultado);
+                return resultado;
+
+            } catch (fetchError) {
+                console.error('🚨 Erro detalhado:', fetchError);
+                
+                // Verificar tipos específicos de erro
+                if (fetchError.name === 'TypeError' && fetchError.message.includes('fetch')) {
+                    throw new Error('❌ Erro de conexão. Verifique:\n• URL do Google Apps Script está correta?\n• Apps Script foi deployado como Web App?\n• Permissões estão configuradas como "Qualquer pessoa"?');
+                } else {
+                    throw new Error(`❌ Erro: ${fetchError.message}`);
+                }
             }
-
-            return await response.json();
         }
 
         // Salvar configurações no localStorage
@@ -356,6 +383,48 @@
             
             if (funcionarioId) document.getElementById('funcionarioId').value = funcionarioId;
             if (nomeCompleto) document.getElementById('nomeCompleto').value = nomeCompleto;
+        }
+
+        // Testar conexão com Google Apps Script
+        async function testarConexao() {
+            const testBtn = document.getElementById('testBtn');
+            
+            try {
+                testBtn.disabled = true;
+                testBtn.innerHTML = '<span class="loading-spinner"></span>Testando...';
+                mostrarStatus('🔄 Testando conexão...', 'loading');
+                
+                const webhookUrl = WEBHOOK_URL;
+                
+                if (!webhookUrl || webhookUrl === 'COLE_SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI') {
+                    throw new Error('❌ URL não configurada no código');
+                }
+                
+                console.log('🧪 Testando URL:', webhookUrl);
+                
+                // Fazer requisição GET para testar
+                const response = await fetch(webhookUrl, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                console.log('📡 Status do teste:', response.status);
+                
+                if (response.ok) {
+                    const resultado = await response.json();
+                    console.log('✅ Teste bem-sucedido:', resultado);
+                    mostrarStatus('✅ Conexão funcionando! Apps Script online.', 'success');
+                } else {
+                    throw new Error(`Erro HTTP ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro no teste:', error);
+                mostrarStatus(`❌ Teste falhou: ${error.message}`, 'error');
+            } finally {
+                testBtn.disabled = false;
+                testBtn.innerHTML = '🔧 Testar Conexão';
+            }
         }
 
         // Event listener do formulário
@@ -433,6 +502,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             carregarConfiguracoes();
             obterIP();
+            
+            // Event listener para o botão de teste
+            document.getElementById('testBtn').addEventListener('click', testarConexao);
         });
     </script>
 </body>
